@@ -13,6 +13,11 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
 
+  bookingIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Booking"
+  }],
+
   amount: {
     type: Number,
     required: true
@@ -24,6 +29,8 @@ const transactionSchema = new mongoose.Schema({
   },
   
   razorpayPaymentId: String,
+
+  razorpaySignature: String,
 
   status: {
     type: String,

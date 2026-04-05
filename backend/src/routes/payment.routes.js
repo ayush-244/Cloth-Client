@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getRazorpayKey,
   createOrder,
   verifyPayment
 } from "../controllers/payment.controller.js";
@@ -10,7 +11,8 @@ import { createOrderSchema, verifyPaymentSchema } from "../validations/payment.v
 
 const router = express.Router();
 
+router.get("/razorpay-key", protect, getRazorpayKey);
 router.post("/create-order", protect, validate(createOrderSchema), createOrder);
-router.post("/verify", protect, validate(verifyPaymentSchema), verifyPayment);
+router.post("/verify-payment", protect, validate(verifyPaymentSchema), verifyPayment);
 
 export default router;

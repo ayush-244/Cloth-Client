@@ -40,8 +40,39 @@ const bookingSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["booked", "returned", "late"],
+    enum: ["booked", "confirmed", "outForDelivery", "inUse", "returned", "late"],
     default: "booked"
+  },
+
+  returnCondition: {
+    type: String,
+    enum: ["good", "minorDamage", "heavyDamage"],
+    default: null
+  },
+
+  cleaningRequired: {
+    type: Boolean,
+    default: false
+  },
+
+  repairRequired: {
+    type: Boolean,
+    default: false
+  },
+
+  damageFee: {
+    type: Number,
+    default: 0
+  },
+
+  cleaningFee: {
+    type: Number,
+    default: 0
+  },
+
+  returnedAt: {
+    type: Date,
+    default: null
   }
 
 }, { timestamps: true });

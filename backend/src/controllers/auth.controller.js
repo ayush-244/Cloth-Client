@@ -14,9 +14,16 @@ export const register = async (req, res, next) => {
       password: hashed
     });
 
+    const token = generateToken(user);
+
     res.status(201).json({
-      success: true,
-      data: { token: generateToken(user) }
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user'
+      }
     });
   } catch (err) {
     next(err);
@@ -28,22 +35,31 @@ export const login = async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-      const error = new Error("User not found");
-      error.statusCode = 400;
+      // Don't reveal if user exists (prevent enumeration attack)
+      const error = new Error("Invalid email or password");
+      error.statusCode = 401;
       throw error;
     }
 
     const match = await bcrypt.compare(req.body.password, user.password);
 
     if (!match) {
-      const error = new Error("Wrong password");
-      error.statusCode = 400;
+      // Same error message for both cases
+      const error = new Error("Invalid email or password");
+      error.statusCode = 401;
       throw error;
     }
 
+    const token = generateToken(user);
+
     res.json({
-      success: true,
-      data: { token: generateToken(user) }
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user'
+      }
     });
   } catch (err) {
     next(err);
