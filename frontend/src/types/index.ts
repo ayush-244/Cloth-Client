@@ -18,6 +18,10 @@ export interface Product {
   images: string[];
   createdAt?: string;
   updatedAt?: string;
+  // Rating fields
+  averageRating?: number;
+  totalReviews?: number;
+  ratingDistribution?: RatingDistribution;
 }
 
 export interface LoginRequest {
@@ -93,7 +97,7 @@ export interface Booking {
   rentalEndDate: string;
   totalPrice: number;
   paymentId?: string;
-  orderStatus: 'pending' | 'confirmed' | 'shipped' | 'returned' | 'cancelled';
+  orderStatus: 'pending' | 'confirmed' | 'shipped' | 'returned' | 'cancelled' | 'booked' | 'inUse' | 'outForDelivery' | 'late';
   shippingAddress: Address;
   createdAt?: string;
   updatedAt?: string;
@@ -112,4 +116,85 @@ export interface CheckoutData {
   shippingAddress: Address;
   totalPrice: number;
   rentalStartDate: string;
+}
+
+// Reviews & Ratings
+export interface RatingDistribution {
+  5: number;
+  4: number;
+  3: number;
+  2: number;
+  1: number;
+}
+
+export interface Review {
+  _id: string;
+  id?: string;
+  userId: string | {
+    _id: string;
+    name: string;
+    email?: string;
+  };
+  productId: string;
+  orderId?: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment: string;
+  reviewerName: string;
+  reviewerEmail?: string;
+  helpful: number;
+  unhelpful: number;
+  isVerifiedPurchase?: boolean;
+  isRecent?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewStats {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: RatingDistribution;
+  percentages: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
+export interface ProductReviewResponse {
+  success: boolean;
+  data: {
+    reviews: Review[];
+    stats: {
+      averageRating: number;
+      totalReviews: number;
+      ratingDistribution: RatingDistribution;
+    };
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  };
+}
+
+export interface CreateReviewRequest {
+  productId: string;
+  orderId?: string;
+  userId: string;  // Required for authentication
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment?: string;
+  reviewerName?: string;
+  reviewerEmail?: string;
+}
+
+export interface ReviewEligibilityResponse {
+  success: boolean;
+  data: {
+    canReview: boolean;
+    reason: string;
+    hasReviewed: boolean;
+  };
 }

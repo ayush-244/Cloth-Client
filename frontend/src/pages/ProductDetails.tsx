@@ -5,10 +5,13 @@ import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../hooks/useCart';
 import { useAvailability } from '../hooks/useAvailability';
-import { Product } from '../types';
+import { Product, Booking } from '../types';
 import { formatPrice } from '../utils/helpers';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import AvailabilityStatus from '../components/ui/AvailabilityStatus';
+import RatingStars from '../components/ui/RatingStars';
+import ReviewsSection from '../components/ui/ReviewsSection';
+import api from '../services/api';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams();
@@ -24,6 +27,8 @@ const ProductDetails: React.FC = () => {
   const [rentalQuantity, setRentalQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
   // Date states
   const today = new Date().toISOString().split('T')[0];
@@ -46,6 +51,28 @@ const ProductDetails: React.FC = () => {
       setLoading(false);
     }
   }, [id, products, productsLoading, authLoading, isAuthenticated, navigate]);
+
+  // Fetch user bookings for review eligibility
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchUserBookings = async () => {
+      try {
+        setBookingsLoading(true);
+        const response = await api.get('/api/bookings/my');
+        if (response.data.success) {
+          setUserBookings(response.data.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user bookings:', err);
+        setUserBookings([]);
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+
+    fetchUserBookings();
+  }, [isAuthenticated]);
 
   // Check availability when dates or quantity changes
   useEffect(() => {
@@ -211,6 +238,17 @@ const ProductDetails: React.FC = () => {
               <h1 className="text-4xl font-semibold text-gray-900 mt-2">
                 {product.name}
               </h1>
+
+              {/* Rating display */}
+              {product.totalReviews && product.totalReviews > 0 && (
+                <div className="flex items-center gap-3 mt-3">
+                  <RatingStars rating={product.averageRating || 0} size="sm" readOnly />
+                  <span className="text-sm text-gray-600">
+                    {product.averageRating?.toFixed(1)} ({product.totalReviews} {product.totalReviews === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              )}
+
               {product.description && (
                 <p className="text-gray-600 font-light mt-3">
                   {product.description}
@@ -358,6 +396,15 @@ const ProductDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reviews Section */}
+      {product && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200">
+          <ReviewsSection
+            productId={product._id || product.id || ''}
+          />
+        </div>
+      )}
     </div>
   );
 };

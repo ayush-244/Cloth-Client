@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 interface AvailabilityResponse {
   available: boolean;
@@ -24,8 +24,8 @@ export const useAvailability = () => {
       setChecking(true);
       setError(null);
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/bookings/check-availability/${productId}`,
+      const response = await api.post(
+        `/api/bookings/check-availability/${productId}`,
         {
           startDate,
           endDate,
@@ -36,11 +36,9 @@ export const useAvailability = () => {
       const data = response.data.data;
       setAvailability(data);
       return data;
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage =
-        axios.isAxiosError(err) && err.response?.data?.message
-          ? err.response.data.message
-          : 'Failed to check availability. Please try again.';
+        err.response?.data?.message || 'Failed to check availability. Please try again.';
       setError(errorMessage);
       setAvailability(null);
       return null;
