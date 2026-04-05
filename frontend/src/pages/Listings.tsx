@@ -13,7 +13,7 @@ export default Listings;
                     <h2 className="text-lg font-semibold mt-2">{product.name}</h2>
                     <p className="text-gray-600">Rent: ${product.rentPrice} per day</p>
                     <a
-                        href={`https://wa.me/?text=I%20would%20like%20to%20rent%20${product.name}`}
+                        href={`https://wa.me/919162573098?text=I%20would%20like%20to%20rent%20${product.name}`}
                         className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded"
                     >
                         Rent via WhatsApp

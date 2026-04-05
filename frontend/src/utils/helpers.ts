@@ -1,4 +1,4 @@
-export const generateWhatsAppLink = (productName: string, phoneNumber: string = '919876543210'): string => {
+export const generateWhatsAppLink = (productName: string, phoneNumber: string = '919162573098'): string => {
   const message = `I want to rent ${encodeURIComponent(productName)}. Please let me know the details and availability.`;
   return `https://wa.me/${phoneNumber}?text=${message}`;
 };

@@ -41,7 +41,7 @@ const ProductDetails: React.FC = () => {
   const handleWhatsApp = () => {
     if (!product) return;
     const message = `I'm interested in renting "${product.name}" for ₹${product.rentPrice}/day. Please confirm availability.`;
-    const whatsappLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const whatsappLink = `https://wa.me/919162573098?text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, '_blank');
   };
 

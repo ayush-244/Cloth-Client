@@ -216,7 +216,7 @@ const OrderConfirmation: React.FC = () => {
           </button>
 
           <a
-            href={`https://wa.me/?text=Hi, I have a query about my order ${order.orderId}`}
+            href={`https://wa.me/919162573098?text=Hi, I have a query about my order ${order.orderId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full px-6 py-3 border border-gray-900 text-gray-900 font-light rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
