@@ -5,16 +5,21 @@ import {
   returnProduct,
   getAllBookings,
   updateBookingStatus,
-  submitReturn
+  submitReturn,
+  checkAvailability
 } from "../controllers/booking.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/admin.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { createBookingSchema, returnBookingSchema } from "../validations/booking.validation.js";
+import { createBookingSchema, returnBookingSchema, checkAvailabilitySchema } from "../validations/booking.validation.js";
 
 const router = express.Router();
 
+// Public route - check availability (no auth required for viewing)
+router.post("/check-availability/:productId", validate(checkAvailabilitySchema), checkAvailability);
+
+// Protected routes
 router.post("/", protect, validate(createBookingSchema), createBooking);
 router.get("/my", protect, getMyBookings);
 router.post("/return", protect, validate(returnBookingSchema), returnProduct);

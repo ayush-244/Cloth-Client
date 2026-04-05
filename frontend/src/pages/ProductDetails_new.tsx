@@ -51,12 +51,13 @@ const ProductDetails: React.FC = () => {
   useEffect(() => {
     if (!product || !startDate || !endDate) return;
 
+    const productId = (product._id || product.id) as string;
     const timer = setTimeout(() => {
-      checkAvailability(product._id, startDate, endDate, rentalQuantity);
+      checkAvailability(productId, startDate, endDate, rentalQuantity);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [startDate, endDate, rentalQuantity, product?.id]);
+  }, [startDate, endDate, rentalQuantity, product?.id, product?._id]);
 
   const handleStartDateChange = (date: string) => {
     setStartDate(date);
@@ -64,6 +65,13 @@ const ProductDetails: React.FC = () => {
 
   const handleEndDateChange = (date: string) => {
     setEndDate(date);
+  };
+
+  const handleWhatsApp = () => {
+    if (!product) return;
+    const message = `I'm interested in renting "${product.name}" for ₹${product.rentPrice}/day. Please confirm availability.`;
+    const whatsappLink = `https://wa.me/919162573098?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, '_blank');
   };
 
   // Calculate total days and price
@@ -84,13 +92,6 @@ const ProductDetails: React.FC = () => {
     !endDate ||
     !availability?.available ||
     product?.availableStock === 0;
-
-  const handleWhatsApp = () => {
-    if (!product) return;
-    const message = `I'm interested in renting "${product.name}" for ₹${product.rentPrice}/day. Please confirm availability.`;
-    const whatsappLink = `https://wa.me/919162573098?text=${encodeURIComponent(message)}`;
-    window.open(whatsappLink, '_blank');
-  };
 
   // Loading state
   if (loading || authLoading || !isAuthenticated) {
@@ -146,8 +147,8 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const images = product.images && product.images.length > 0 
-    ? product.images 
+  const images = product.images && product.images.length > 0
+    ? product.images
     : ['https://images.unsplash.com/photo-1595777707802-78f82b10b6ca?w=600&h=600&fit=crop'];
 
   return (

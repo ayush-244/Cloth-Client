@@ -33,7 +33,7 @@ export const useCart = () => {
   }, []);
 
   // Add item to cart
-  const addToCart = useCallback((product: Product, rentalDays: number = 1) => {
+  const addToCart = useCallback((product: Product, rentalDays: number = 1, quantity: number = 1) => {
     setCart(prevCart => {
       const existingItem = prevCart.items.find(
         item => item.productId === (product._id || product.id)
@@ -48,7 +48,8 @@ export const useCart = () => {
             ? {
                 ...item,
                 rentalDays,
-                totalPrice: product.rentPrice * rentalDays,
+                quantity,
+                totalPrice: product.rentPrice * rentalDays * quantity,
               }
             : item
         );
@@ -58,8 +59,9 @@ export const useCart = () => {
           productId: product._id || product.id || '',
           product,
           rentalDays,
+          quantity,
           pricePerDay: product.rentPrice,
-          totalPrice: product.rentPrice * rentalDays,
+          totalPrice: product.rentPrice * rentalDays * quantity,
           addedAt: new Date().toISOString(),
         };
         updatedItems = [...prevCart.items, newItem];

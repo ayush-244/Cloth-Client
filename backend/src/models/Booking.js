@@ -10,7 +10,8 @@ const bookingSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product",
-    required: true
+    required: true,
+    index: true
   },
 
   size: {
@@ -18,14 +19,23 @@ const bookingSchema = new mongoose.Schema({
     required: true
   },
 
+  quantity: {
+    type: Number,
+    required: true,
+    default: 1,
+    min: 1
+  },
+
   startDate: {
     type: Date,
-    required: true
+    required: true,
+    index: true
   },
   
   endDate: {
     type: Date,
-    required: true
+    required: true,
+    index: true
   },
 
   totalAmount: {
@@ -76,5 +86,12 @@ const bookingSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
+
+// Composite index for efficient booking conflict queries
+bookingSchema.index({ productId: 1, startDate: 1, endDate: 1 });
+// Index for filtering by status
+bookingSchema.index({ status: 1 });
+// Index for user bookings
+bookingSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model("Booking", bookingSchema);

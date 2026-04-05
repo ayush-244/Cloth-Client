@@ -1,60 +1,86 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock, AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 
-const Login: React.FC = () => {
-  const [loginMode, setLoginMode] = useState<'user' | 'admin'>('user');
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password123');
+const Signup: React.FC = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const switchMode = (mode: 'user' | 'admin') => {
-    setLoginMode(mode);
-    setError(null);
-    setSuccess(null);
-    
-    // Update demo credentials based on mode
-    if (mode === 'admin') {
-      setEmail('admin@example.com');
-      setPassword('admin123');
-    } else {
-      setEmail('user@example.com');
-      setPassword('password123');
+  const validateForm = (): boolean => {
+    if (!name.trim()) {
+      setError('Name is required');
+      return false;
     }
+    if (name.trim().length < 2) {
+      setError('Name must be at least 2 characters');
+      return false;
+    }
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    setIsLoading(true);
 
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields');
-      setIsLoading(false);
+    if (!validateForm()) {
       return;
     }
 
-    const result = await login(email, password);
+    setIsLoading(true);
 
-    if (result.success) {
-      setSuccess('Login successful! Redirecting...');
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.toLowerCase(),
+            password,
+            role: 'user',
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Registration failed. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccess('Account created successfully! Redirecting to login...');
       setTimeout(() => {
-        // Navigate to admin dashboard if admin login, else products
-        const redirectPath = loginMode === 'admin' ? '/admin/dashboard' : '/products';
-        navigate(redirectPath);
+        navigate('/login');
       }, 1500);
-    } else {
-      setError(result.error || 'Login failed. Please try again.');
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -78,46 +104,19 @@ const Login: React.FC = () => {
             </div>
 
             <h1 className="text-5xl font-serif font-light text-gray-900 mb-2">Cloth Rental</h1>
-            <p className="text-gray-600 text-sm font-light tracking-widest uppercase">Premium Fashion Experience</p>
+            <p className="text-gray-600 text-sm font-light tracking-widest uppercase">Create Your Account</p>
           </div>
 
           {/* Premium Auth Card */}
           <div className="bg-white border border-gray-200 rounded-2xl p-10 mb-8 shadow-sm">
             
-            {/* Login Mode Toggle */}
-            <div className="mb-10 flex gap-3 border border-gray-200 rounded-lg p-1 bg-gray-50">
-              <button
-                type="button"
-                onClick={() => switchMode('user')}
-                className={`flex-1 py-3 px-4 rounded-md text-sm font-light transition-all uppercase tracking-widest ${
-                  loginMode === 'user'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                User Login
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode('admin')}
-                className={`flex-1 py-3 px-4 rounded-md text-sm font-light transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${
-                  loginMode === 'admin'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                Admin Login
-              </button>
-            </div>
-
             {/* Form Header */}
             <div className="mb-10">
               <h2 className="text-3xl font-serif font-light text-gray-900 mb-1">
-                {loginMode === 'admin' ? 'Admin Panel' : 'Welcome'}
+                Join Us
               </h2>
               <p className="text-gray-600 text-sm font-light">
-                {loginMode === 'admin' ? 'Sign in to admin dashboard' : 'Sign in to your account'}
+                Create your account to get started
               </p>
             </div>
 
@@ -137,8 +136,27 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            {/* Login Form */}
+            {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-7">
+              {/* Name Field */}
+              <div>
+                <label className="block text-xs font-light text-gray-600 mb-3 uppercase tracking-widest">
+                  Full Name
+                </label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-4 w-4 h-4 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading}
+                    className="w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 focus:bg-white transition-all duration-200 font-light"
+                    required
+                  />
+                </div>
+              </div>
+
               {/* Email Field */}
               <div>
                 <label className="block text-xs font-light text-gray-600 mb-3 uppercase tracking-widest">
@@ -177,7 +195,26 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sign In Button */}
+              {/* Confirm Password Field */}
+              <div>
+                <label className="block text-xs font-light text-gray-600 mb-3 uppercase tracking-widest">
+                  Confirm Password
+                </label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-4 w-4 h-4 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 focus:bg-white transition-all duration-200 font-light"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Sign Up Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -189,10 +226,10 @@ const Login: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>Signing In</span>
+                    <span>Creating Account</span>
                   </>
                 ) : (
-                  'Sign In'
+                  'Create Account'
                 )}
               </button>
             </form>
@@ -200,25 +237,16 @@ const Login: React.FC = () => {
             {/* Divider */}
             <div className="my-8 border-t border-gray-200" />
 
-            {/* Demo Credentials */}
+            {/* Password Requirements */}
             <div>
-              <p className="text-xs font-light text-gray-600 mb-5 uppercase tracking-widest">
-                {loginMode === 'admin' ? 'Admin Demo Credentials' : 'Demo Credentials'}
+              <p className="text-xs font-light text-gray-600 mb-4 uppercase tracking-widest">
+                Password Requirements
               </p>
-              <div className="space-y-4 bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div>
-                  <p className="text-xs text-gray-600 mb-2 uppercase tracking-widest font-light">Email</p>
-                  <code className="text-sm text-gray-900 font-light bg-white px-4 py-3 rounded border border-gray-200 block hover:border-gray-400 transition-colors cursor-text select-all">
-                    {loginMode === 'admin' ? 'admin@example.com' : 'user@example.com'}
-                  </code>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-2 uppercase tracking-widest font-light">Password</p>
-                  <code className="text-sm text-gray-900 font-light bg-white px-4 py-3 rounded border border-gray-200 block hover:border-gray-400 transition-colors cursor-text">
-                    {loginMode === 'admin' ? 'admin123' : 'password123'}
-                  </code>
-                </div>
-              </div>
+              <ul className="space-y-2 text-xs text-gray-600 font-light">
+                <li>✓ At least 6 characters long</li>
+                <li>✓ Unique to your account</li>
+                <li>✓ Can contain letters, numbers, and symbols</li>
+              </ul>
             </div>
           </div>
 
@@ -231,21 +259,17 @@ const Login: React.FC = () => {
               © 2026 Cloth Rental. All rights reserved.
             </p>
             
-            {/* Signup Link - Only show for User Login */}
-            {loginMode === 'user' && (
-              <div className="pt-4 border-t border-gray-200 mt-4">
-                <p className="text-xs text-gray-600 font-light mb-3">
-                  Don't have an account?
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/signup')}
-                  className="text-sm font-light text-gray-900 hover:text-gray-600 transition-colors underline"
-                >
-                  Create Account
-                </button>
-              </div>
-            )}
+            {/* Back to Login Link */}
+            <div className="pt-4 border-t border-gray-200 mt-4">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="inline-flex items-center gap-2 text-sm font-light text-gray-900 hover:text-gray-600 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Login
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -253,4 +277,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Signup;

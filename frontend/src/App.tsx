@@ -3,6 +3,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Home';
+import Signup from './pages/Signup';
 import Products from './pages/Products';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminOrders from './pages/AdminOrders';
@@ -42,6 +43,7 @@ const AppContent = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/" element={isAuthenticated ? <Navigate to="/products" /> : <Login />} />
 
           {/* Protected Routes */}

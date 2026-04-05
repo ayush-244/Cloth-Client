@@ -57,6 +57,7 @@ export interface CartItem {
   productId: string;
   product: Product;
   rentalDays: number;
+  quantity?: number;
   pricePerDay: number;
   totalPrice: number;
   addedAt: string;
