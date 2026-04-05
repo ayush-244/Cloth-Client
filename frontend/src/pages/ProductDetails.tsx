@@ -122,11 +122,11 @@ const ProductDetails: React.FC = () => {
           {/* Left: Images */}
           <div className="flex flex-col gap-4">
             {/* Main Image */}
-            <div className="overflow-hidden rounded-lg bg-gray-50 h-auto">
+            <div className="overflow-hidden rounded-lg bg-gray-50 aspect-square flex items-center justify-center">
               <img
                 src={images[selectedImage]}
                 alt={product.name}
-                className="w-full h-auto object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
 

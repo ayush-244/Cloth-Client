@@ -51,11 +51,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       className="group cursor-pointer flex flex-col items-center text-center"
     >
       {/* Image Container */}
-      <div className="relative overflow-hidden mb-4 w-full">
+      <div className="relative overflow-hidden mb-4 w-full aspect-square bg-gray-50 flex items-center justify-center">
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
       </div>
 
