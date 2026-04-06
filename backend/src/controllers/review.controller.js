@@ -25,7 +25,7 @@ export const getProductReviews = async (req, res, next) => {
     // Simple query - no populate
     console.log("🔍 Querying reviews for productId...");
     const reviews = await Review.find({ productId })
-      .select("productId rating comment reviewerName createdAt")
+      .select("productId userId rating comment reviewerName helpful unhelpful isVerifiedPurchase createdAt updatedAt")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -37,12 +37,21 @@ export const getProductReviews = async (req, res, next) => {
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
       : 0;
 
+    // Calculate rating distribution
+    const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(review => {
+      if (review.rating >= 1 && review.rating <= 5) {
+        ratingDistribution[review.rating]++;
+      }
+    });
+
     res.status(200).json({
       success: true,
       reviews,
       stats: {
         averageRating: parseFloat(averageRating),
-        totalReviews
+        totalReviews,
+        ratingDistribution
       }
     });
   } catch (err) {

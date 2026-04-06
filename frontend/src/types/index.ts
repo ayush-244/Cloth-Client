@@ -162,21 +162,14 @@ export interface ReviewStats {
   };
 }
 
+// API Response Types
 export interface ProductReviewResponse {
   success: boolean;
-  data: {
-    reviews: Review[];
-    stats: {
-      averageRating: number;
-      totalReviews: number;
-      ratingDistribution: RatingDistribution;
-    };
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
+  reviews: Review[];
+  stats: {
+    averageRating: number;
+    totalReviews: number;
+    ratingDistribution: RatingDistribution;
   };
 }
 

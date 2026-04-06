@@ -53,8 +53,9 @@ export const useReviews = () => {
 
       if (response.data.success) {
         // Backend returns flat structure: { success, reviews, stats }
-        const reviews = response.data.reviews || [];
-        const stats = response.data.stats || {};
+        const responseData = response.data as any;
+        const reviews = responseData.reviews || [];
+        const stats = responseData.stats || {};
         
         setReviews(reviews);
         setStats({

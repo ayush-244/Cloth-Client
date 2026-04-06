@@ -18,9 +18,6 @@ endDate: { type: Date, required: true, index: true },
 productId: { type: ObjectId, required: true, index: true }
 ```
 
-**Lines Changed**: ~20 lines
-
----
 
 ### 2. ✅ CREATED: `backend/src/services/booking.service.js`
 **New File - Core Business Logic**
