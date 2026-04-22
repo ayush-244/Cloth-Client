@@ -3,7 +3,6 @@ import {
   createReview,
   getProductReviews,
   getReviewStatistics,
-  checkReviewEligibility,
   getUserReview,
   updateReview,
   deleteReview,
@@ -12,6 +11,8 @@ import {
 
 import { protect } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/admin.middleware.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { createReviewSchema, updateReviewSchema } from "../validations/review.validation.js";
 
 const router = express.Router();
 
@@ -30,14 +31,13 @@ router.get("/stats/:productId", getReviewStatistics);
  */
 
 // Create a new review (authenticated users only)
-// SIMPLIFIED: Removed validation middleware for now
-router.post("/", protect, createReview);
+router.post("/", protect, validate(createReviewSchema), createReview);
 
 // Get user's review for a product (authenticated users only)
 router.get("/user-review/:productId", protect, getUserReview);
 
 // Update a review (authenticated users can edit their own)
-router.put("/:id", protect, updateReview);
+router.put("/:id", protect, validate(updateReviewSchema), updateReview);
 
 // Delete a review (authenticated users can delete)
 router.delete("/:id", protect, deleteReview);

@@ -171,7 +171,7 @@ export const updateBookingStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ["booked", "confirmed", "outForDelivery", "inUse", "returned", "late"];
+    const validStatuses = ["booked", "confirmed", "packed", "outForDelivery", "inUse", "returnPending", "returned", "completed"];
     
     if (!validStatuses.includes(status)) {
       const error = new Error("Invalid status");

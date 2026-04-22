@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
-import Login from './pages/Home';
+import Home from './pages/Home';
 import Signup from './pages/Signup';
 import Products from './pages/Products';
 import AdminDashboard from './pages/AdminDashboard';
@@ -15,7 +15,8 @@ import ShippingAddress from './pages/ShippingAddress';
 import Payment from './pages/Payment';
 import Checkout from './pages/Checkout';
 import Dashboard from './pages/Dashboard';
-import OrderConfirmation from './pages/OrderConfirmation';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 import { useAuth } from './hooks/useAuth';
 
 const AppContent = () => {
@@ -25,10 +26,10 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur-lg opacity-50 animate-pulse" />
-          <div className="relative w-12 h-12 rounded-full border-4 border-slate-700 border-t-purple-500 animate-spin" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-100 rounded-full blur-lg opacity-50 animate-pulse" />
+          <div className="relative w-12 h-12 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin" />
         </div>
       </div>
     );
@@ -42,20 +43,26 @@ const AppContent = () => {
       <main className="flex-grow">
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/" element={isAuthenticated ? <Navigate to="/products" /> : <Login />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/" />} />
+          <Route path="/product/:id" element={isAuthenticated ? <ProductDetails /> : <Navigate to="/" />} />
+
+          {/* Auth Routes - Hidden if authenticated */}
+          {!isAuthenticated && (
+            <>
+              <Route path="/signup" element={<Signup />} />
+            </>
+          )}
 
           {/* Protected Routes */}
           {isAuthenticated && (
             <>
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/shipping-address" element={<ShippingAddress />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-confirmation" element={<OrderConfirmation />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-failed" element={<PaymentFailed />} />
               <Route path="/dashboard" element={<Dashboard />} />
               
               {/* Admin Routes */}

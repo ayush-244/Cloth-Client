@@ -1,97 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, Settings, Package, History, User as UserIcon } from 'lucide-react';
-
-interface UserBooking {
-  _id: string;
-  productName: string;
-  rentalStartDate: string;
-  rentalEndDate: string;
-  totalPrice: number;
-  status: 'confirmed' | 'shipped' | 'returned' | 'cancelled';
-  productImage: string;
-}
+import { useBooking } from '../hooks/useBooking';
+import { OrderTimeline, ReturnChecklist } from '../components/index';
+import { LogOut, Settings, Package, History, User as UserIcon, AlertCircle } from 'lucide-react';
+import { Booking } from '../types';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
+  const { bookings, loading: bookingsLoading, error, getMyBookings } = useBooking();
   const [tab, setTab] = useState<'active' | 'history' | 'profile'>('active');
-  const [bookings, setBookings] = useState<UserBooking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showReturnForm, setShowReturnForm] = useState(false);
 
   // Check authentication
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/login');
+      navigate('/');
     }
   }, [isAuthenticated, authLoading, navigate]);
 
   // Fetch bookings
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      fetchBookings();
+      getMyBookings();
     }
   }, [authLoading, isAuthenticated]);
 
-  const fetchBookings = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/booking/my-bookings`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        setBookings(data.data || []);
-      } else {
-        setError('Failed to load bookings');
-      }
+  const handleReturnSubmit = async (data: any) => {
+    if (!selectedBooking) return;
+    try {
+      // Submit return here - the hook will handle the API call
+      setShowReturnForm(false);
+      setSelectedBooking(null);
+      await getMyBookings();
     } catch (err) {
-      console.error('Error fetching bookings:', err);
-      // Mock data for demo
-      setBookings([
-        {
-          _id: '1',
-          productName: 'Black Sherwani',
-          rentalStartDate: new Date().toISOString().split('T')[0],
-          rentalEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0],
-          totalPrice: 2500,
-          status: 'confirmed',
-          productImage:
-            'https://images.unsplash.com/photo-1595777707802-78f82b10b6ca?w=200&h=200&fit=crop',
-        },
-      ]);
-    } finally {
-      setLoading(false);
+      console.error('Failed to submit return:', err);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      confirmed: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      shipped: 'bg-blue-50 text-blue-700 border-blue-200',
-      returned: 'bg-green-50 text-green-700 border-green-200',
-      cancelled: 'bg-red-50 text-red-700 border-red-200',
+    const colors: Record<string, string> = {
+      booked: 'bg-blue-50 text-blue-700 border-blue-200',
+      confirmed: 'bg-green-50 text-green-700 border-green-200',
+      packed: 'bg-purple-50 text-purple-700 border-purple-200',
+      outForDelivery: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      inUse: 'bg-orange-50 text-orange-700 border-orange-200',
+      returnPending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      returned: 'bg-gray-50 text-gray-700 border-gray-200',
+      completed: 'bg-teal-50 text-teal-700 border-teal-200',
     };
     return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
-  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'shipped');
-  const pastBookings = bookings.filter(b => b.status === 'returned' || b.status === 'cancelled');
+  const activeBookings = bookings.filter(b =>
+    ['booked', 'confirmed', 'packed', 'outForDelivery', 'inUse', 'returnPending'].includes(b.status)
+  );
+  const pastBookings = bookings.filter(b =>
+    ['returned', 'completed'].includes(b.status)
+  );
 
   if (authLoading) {
     return (
@@ -176,12 +149,16 @@ const Dashboard: React.FC = () => {
                 </h2>
 
                 {error && (
-                  <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 font-light">{error}</p>
+                  <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-red-900">Error</p>
+                      <p className="text-sm font-light text-red-700">{error}</p>
+                    </div>
                   </div>
                 )}
 
-                {loading ? (
+                {bookingsLoading ? (
                   <p className="text-gray-600 font-light">Loading rentals...</p>
                 ) : activeBookings.length === 0 ? (
                   <div className="text-center py-12">
@@ -197,41 +174,94 @@ const Dashboard: React.FC = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {activeBookings.map(booking => (
                       <div
                         key={booking._id}
-                        className="border border-gray-200 rounded-lg p-6 flex gap-6"
+                        className="border border-gray-200 rounded-lg overflow-hidden bg-white"
                       >
-                        <img
-                          src={booking.productImage}
-                          alt={booking.productName}
-                          className="w-32 h-32 object-contain bg-gray-50 rounded-lg"
-                        />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            {booking.productName}
-                          </h3>
-                          <div className="space-y-2 text-sm text-gray-600 font-light mb-4">
-                            <p>
-                              📅 From {new Date(booking.rentalStartDate).toLocaleDateString()}
-                            </p>
-                            <p>
-                              📅 To {new Date(booking.rentalEndDate).toLocaleDateString()}
-                            </p>
-                            <p>💰 ₹{booking.totalPrice}</p>
+                        {/* Booking Header */}
+                        <div className="bg-gray-50 border-b border-gray-200 p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                {booking.productId?.name || 'Product'}
+                              </h3>
+                              <p className="text-sm font-light text-gray-600">
+                                Order #{booking._id?.slice(-8).toUpperCase()}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-light border ${getStatusColor(
+                                booking.status
+                              )}`}
+                            >
+                              {booking.status}
+                            </span>
                           </div>
-                          <span
-                            className={`inline-block px-3 py-1 rounded text-xs font-light border ${getStatusColor(
-                              booking.status
-                            )}`}
-                          >
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </span>
                         </div>
-                        <button className="px-6 py-3 border border-gray-900 text-gray-900 font-light rounded-lg hover:bg-gray-50 transition-all duration-300 self-center">
-                          Track Order
-                        </button>
+
+                        {/* Order Timeline */}
+                        <div className="p-6 border-b border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-4">Rental Progress</h4>
+                          <OrderTimeline
+                            currentStatus={booking.status}
+                            startDate={booking.startDate}
+                            endDate={booking.endDate}
+                          />
+                        </div>
+
+                        {/* Booking Details */}
+                        <div className="p-6 grid md:grid-cols-3 gap-6 border-b border-gray-200">
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Rental Period
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(booking.startDate).toLocaleDateString()} to{' '}
+                              {new Date(booking.endDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Size
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">{booking.size || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Total Amount
+                            </p>
+                            <p className="text-lg font-medium text-gray-900">
+                              ₹{booking.totalAmount?.toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-6 flex gap-3">
+                          {booking.status === 'returnPending' && (
+                            <button
+                              onClick={() => {
+                                setSelectedBooking(booking);
+                                setShowReturnForm(true);
+                              }}
+                              className="flex-1 px-6 py-3 bg-blue-100 text-blue-700 font-light rounded-lg hover:bg-blue-200 transition-colors"
+                            >
+                              Submit Return
+                            </button>
+                          )}
+                          {booking.status === 'inUse' && (
+                            <p className="text-sm text-gray-600 font-light italic">
+                              Enjoy your rental! You'll receive instructions for return once the rental period ends.
+                            </p>
+                          )}
+                          {!['returnPending', 'inUse'].includes(booking.status) && (
+                            <p className="text-sm text-gray-600 font-light italic">
+                              Status: {booking.status}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -246,7 +276,7 @@ const Dashboard: React.FC = () => {
                   Rental History
                 </h2>
 
-                {loading ? (
+                {bookingsLoading ? (
                   <p className="text-gray-600 font-light">Loading history...</p>
                 ) : pastBookings.length === 0 ? (
                   <div className="text-center py-12">
@@ -260,35 +290,50 @@ const Dashboard: React.FC = () => {
                     {pastBookings.map(booking => (
                       <div
                         key={booking._id}
-                        className="border border-gray-200 rounded-lg p-6 flex gap-6"
+                        className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                       >
-                        <img
-                          src={booking.productImage}
-                          alt={booking.productName}
-                          className="w-32 h-32 object-contain bg-gray-50 rounded-lg"
-                        />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            {booking.productName}
-                          </h3>
-                          <div className="space-y-2 text-sm text-gray-600 font-light mb-4">
-                            <p>
-                              Rented from {new Date(booking.rentalStartDate).toLocaleDateString()} to{' '}
-                              {new Date(booking.rentalEndDate).toLocaleDateString()}
+                        <div className="grid md:grid-cols-4 gap-4 items-center">
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Product
                             </p>
-                            <p>Total paid: ₹{booking.totalPrice}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {booking.productId?.name || 'Product'}
+                            </p>
                           </div>
-                          <span
-                            className={`inline-block px-3 py-1 rounded text-xs font-light border ${getStatusColor(
-                              booking.status
-                            )}`}
-                          >
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </span>
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Rental Period
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(booking.startDate).toLocaleDateString()} -{' '}
+                              {new Date(booking.endDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 font-light uppercase tracking-widest mb-1">
+                              Total Paid
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              ₹{booking.totalAmount?.toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span
+                              className={`inline-flex px-3 py-1 rounded-full text-xs font-light border ${getStatusColor(
+                                booking.status
+                              )}`}
+                            >
+                              {booking.status}
+                            </span>
+                            <button
+                              onClick={() => navigate('/products')}
+                              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 font-light transition-colors"
+                            >
+                              Rent Again
+                            </button>
+                          </div>
                         </div>
-                        <button className="px-6 py-3 border border-gray-900 text-gray-900 font-light rounded-lg hover:bg-gray-50 transition-all duration-300 self-center">
-                          Rent Again
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -372,6 +417,28 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Return Form Modal */}
+      {selectedBooking && showReturnForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+            <h2 className="text-2xl font-serif font-light text-gray-900 mb-6">Submit Return</h2>
+            <ReturnChecklist
+              bookingId={selectedBooking._id}
+              onSubmit={handleReturnSubmit}
+            />
+            <button
+              onClick={() => {
+                setShowReturnForm(false);
+                setSelectedBooking(null);
+              }}
+              className="w-full mt-4 px-6 py-2 border border-gray-300 text-gray-700 font-light rounded-lg hover:bg-gray-50 transition-all duration-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

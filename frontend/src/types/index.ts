@@ -90,15 +90,21 @@ export interface Address {
 export interface Booking {
   _id?: string;
   id?: string;
-  userId: string;
-  productId: string;
-  rentedDays: number;
-  rentalStartDate: string;
-  rentalEndDate: string;
-  totalPrice: number;
-  paymentId?: string;
-  orderStatus: 'pending' | 'confirmed' | 'shipped' | 'returned' | 'cancelled' | 'booked' | 'inUse' | 'outForDelivery' | 'late';
-  shippingAddress: Address;
+  userId: string | { _id: string; name: string; email: string };
+  productId: string | { _id: string; name: string; images: string[] };
+  size: string;
+  quantity: number;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  deposit: number;
+  status: 'booked' | 'confirmed' | 'packed' | 'outForDelivery' | 'inUse' | 'returnPending' | 'returned' | 'completed';
+  returnCondition?: 'good' | 'minorDamage' | 'heavyDamage' | null;
+  cleaningRequired?: boolean;
+  repairRequired?: boolean;
+  damageFee: number;
+  cleaningFee: number;
+  returnedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -17,5 +17,10 @@ export { default as ReviewsSection } from './ui/ReviewsSection';
 export { default as Navbar } from './layout/Navbar';
 export { default as Footer } from './layout/Footer';
 
+// Order & Booking Components
+export { default as OrderTimeline } from './OrderTimeline';
+export { default as ReturnChecklist } from './ReturnChecklist';
+export { default as CheckoutSummary } from './CheckoutSummary';
+
 // Utilities
 export { default as ErrorBoundary } from './ErrorBoundary';

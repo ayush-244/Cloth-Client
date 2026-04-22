@@ -41,7 +41,35 @@ export const useAuth = () => {
 
       return { success: true, user: userData };
     } catch (err: any) {
-      const errorMessage = err.message || 'Login failed. Please try again.';
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await api.post<AuthResponse>('/api/auth/register', {
+        name,
+        email,
+        password,
+        role: 'user',
+      });
+
+      const { token, user: userData } = response.data;
+
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+
+      return { success: true, user: userData };
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -64,6 +92,7 @@ export const useAuth = () => {
     loading,
     error,
     login,
+    register,
     logout,
     isAuthenticated,
     isAdmin,

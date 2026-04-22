@@ -3,12 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 import { Menu, X, LogOut, ShoppingBag, User, ChevronDown, Search } from 'lucide-react';
+import AuthPanel from '../AuthPanel';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthPanelOpen, setIsAuthPanelOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
@@ -16,8 +18,9 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
     setIsOpen(false);
+    setOpenDropdown(null);
+    window.location.href = '/';
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -155,7 +158,7 @@ const Navbar: React.FC = () => {
                 {/* Cart Icon */}
                 <button
                   onClick={() => navigate('/cart')}
-                  className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-all duration-200"
                   title="View cart"
                 >
                   <ShoppingBag className="w-6 h-6" />
@@ -169,13 +172,13 @@ const Navbar: React.FC = () => {
                 {/* User Account Dropdown */}
                 <div className="relative group hidden sm:block">
                   <button
-                    className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    className="p-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-all duration-200 group-hover:scale-110"
                     title="Account"
                   >
                     <User className="w-6 h-6" />
                   </button>
 
-                  <div className="absolute right-0 mt-0 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-2">
+                  <div className="absolute right-0 mt-0 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-40">
                     <button
                       onClick={() => navigate('/dashboard')}
                       className="w-full text-left px-4 py-2 text-sm font-light text-gray-900 hover:bg-gray-50 transition-colors"
@@ -210,10 +213,11 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <button
-                onClick={() => navigate('/login')}
-                className="hidden sm:block px-4 py-2 border border-gray-900 text-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 font-light text-sm"
+                onClick={() => setIsAuthPanelOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                title="Account"
               >
-                Login
+                <User className="w-6 h-6" />
               </button>
             )}
 
@@ -230,12 +234,12 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="lg:hidden pb-4 border-t border-gray-200 space-y-2">
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <>
                 {/* Mobile Categories */}
                 <button
                   onClick={() => setOpenDropdown(openDropdown === 'mobile-cat' ? null : 'mobile-cat')}
-                  className="w-full text-left px-4 py-3 flex items-center justify-between font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50"
+                  className="w-full text-left px-4 py-3 flex items-center justify-between font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   Categories
                   <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'mobile-cat' ? 'rotate-180' : ''}`} />
@@ -251,7 +255,7 @@ const Navbar: React.FC = () => {
                           setIsOpen(false);
                           setOpenDropdown(null);
                         }}
-                        className="w-full text-left px-8 py-2 text-sm font-light text-gray-900 hover:bg-gray-100"
+                        className="w-full text-left px-8 py-2 text-sm font-light text-gray-900 hover:bg-gray-100 transition-colors"
                       >
                         {cat.name}
                       </button>
@@ -262,12 +266,12 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/products"
                   onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50"
+                  className="block px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   All Collections
                 </Link>
 
-                <button className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50">
+                <button className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 transition-colors">
                   Blog
                 </button>
 
@@ -275,30 +279,46 @@ const Navbar: React.FC = () => {
                   <Link
                     to="/admin/dashboard"
                     onClick={() => setIsOpen(false)}
-                    className="block px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 border-t border-gray-200"
+                    className="block px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 border-t border-gray-200 transition-colors"
                   >
                     Admin Panel
                   </Link>
                 )}
 
                 <button
-                  onClick={() => navigate('/dashboard')}
-                  className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 border-t border-gray-200"
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 border-t border-gray-200 transition-colors"
                 >
                   My Account
                 </button>
 
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-red-600 hover:bg-red-50 border-t border-gray-200 flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-red-600 hover:bg-red-50 border-t border-gray-200 flex items-center gap-2 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Logout
                 </button>
               </>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsAuthPanelOpen(true);
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-3 font-light text-sm uppercase tracking-widest text-gray-900 hover:bg-gray-50 transition-colors"
+              >
+                Account
+              </button>
             )}
           </div>
         )}
+
+        {/* Auth Panel */}
+        <AuthPanel isOpen={isAuthPanelOpen} onClose={() => setIsAuthPanelOpen(false)} />
       </div>
     </nav>
   );

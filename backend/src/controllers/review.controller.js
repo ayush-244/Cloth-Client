@@ -262,13 +262,6 @@ export const getUserReview = async (req, res) => {
 };
 
 /**
- * CHECK IF USER CAN REVIEW - Placeholder
- */
-export const checkReviewEligibility = async (req, res) => {
-  res.status(501).json({ message: "Not implemented yet" });
-};
-
-/**
  * UPDATE REVIEW - Placeholder
  */
 /**

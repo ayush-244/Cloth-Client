@@ -168,34 +168,66 @@ const Checkout: React.FC = () => {
         order_id: orderData.orderId,
         handler: async (response: any) => {
           console.log('✅ Payment handler called:', response);
-          // Verify payment on backend
-          const verifyResponse = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL}/api/payment/verify-payment`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-              },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
+          try {
+            // Verify payment on backend
+            const verifyResponse = await fetch(
+              `${import.meta.env.VITE_API_BASE_URL}/api/payment/verify-payment`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            const verifyData = await verifyResponse.json();
+            console.log('✅ Payment verified:', verifyData);
+
+            if (verifyData.success) {
+              clearCart();
+              
+              // Prepare order data for success page
+              const orderInfo = {
+                transactionId: verifyData.transactionId || response.razorpay_payment_id,
+                orderId: orderData.orderId,
+                bookingIds: verifyData.bookingIds || [],
+                totalAmount: cart.totalPrice,
+                items: cart.items,
+                rentalStartDate,
+                rentalEndDate: new Date(new Date(rentalStartDate).getTime() + (maxRentalDays * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                shippingAddress: address,
+              };
+
+              navigate('/payment-success', {
+                state: { order: orderInfo },
+              });
+            } else {
+              setError('Payment verification failed');
+              navigate('/payment-failed', {
+                state: { error: verifyData.message || 'Payment verification failed' },
+              });
             }
-          );
-
-          const verifyData = await verifyResponse.json();
-          console.log('✅ Payment verified:', verifyData);
-
-          if (verifyData.success) {
-            clearCart();
-            navigate('/order-confirmation', {
-              state: { orderId: orderData.orderId },
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Payment verification failed';
+            console.error('❌ Verification error:', errorMsg);
+            navigate('/payment-failed', {
+              state: { error: errorMsg },
             });
-          } else {
-            setError('Payment verification failed');
           }
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('❌ Payment cancelled by user');
+            navigate('/payment-failed', {
+              state: { error: 'Payment cancelled. Please try again.' },
+            });
+          },
         },
         prefill: {
           name: address.fullName,
